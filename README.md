@@ -11,6 +11,8 @@ Converted from the supplied Stitch screens using HTML, CSS and vanilla JavaScrip
 - admin-dashboard.html — HR / Client Portal
 - case-studies.html — Clinical Outcomes & ROI
 - clinics.html — On-site Screenings & Workshops
+- about.html — VitalPulse mission and approach
+- contact.html — Enterprise, clinic, and employee contact pathways
 
 ## Global functionality
 - Light/dark theme toggle

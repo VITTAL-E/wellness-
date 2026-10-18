@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 228 48" role="img" aria-labelledby="title">
+  <title id="title">VitalPulse Wellness</title>
+  <circle cx="24" cy="24" r="21" fill="#e5f4ef" stroke="#087f70" stroke-width="2"/>
+  <path d="M8 25h8l4-9 7 17 5-12 3 4h9" fill="none" stroke="#087f70" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+  <text x="56" y="27" fill="#123d36" font-family="Trebuchet MS, Arial, sans-serif" font-size="22" font-weight="700">VitalPulse</text>
+  <text x="57" y="40" fill="#55756e" font-family="Trebuchet MS, Arial, sans-serif" font-size="9" font-weight="600">WELLNESS</text>
+</svg>
