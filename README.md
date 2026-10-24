@@ -13,6 +13,7 @@ Converted from the supplied Stitch screens using HTML, CSS and vanilla JavaScrip
 - clinics.html — On-site Screenings & Workshops
 - about.html — VitalPulse mission and approach
 - contact.html — Enterprise, clinic, and employee contact pathways
+- login.html — Sign-in screen; authentication requires a provider and is not enabled yet
 
 ## Global functionality
 - Light/dark theme toggle

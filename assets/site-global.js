@@ -17,7 +17,6 @@
   "case studies":"case-studies.html","clinical outcomes":"case-studies.html","roi":"case-studies.html",
   "clinics":"clinics.html","on site screenings":"clinics.html","workshops":"clinics.html",
   "about":"about.html","contact":"contact.html","get started":"pricing.html","request demo":"pricing.html",
-  "login":"employee-dashboard.html"
  };
  const norm=s=>(s||"").replace(/\s+/g," ").trim().toLowerCase();
  function toast(msg){
@@ -32,10 +31,16 @@
  function controls(){
   const header=document.querySelector("header");
   if(!header||document.getElementById("vp-nav-controls"))return;
-  if(header.classList.contains("left-64"))header.classList.add("vp-dashboard-header");
+  const dashboardHeader=header.classList.contains("left-64");
+  if(dashboardHeader)header.classList.add("vp-dashboard-header");
   const nav=header.querySelector("nav");
   if(nav){nav.id=nav.id||"vp-main-nav";nav.classList.add("vp-main-nav")}
-  const target=header.querySelector(":scope > div.h-20")||header;
+  const row=header.querySelector(":scope > div.h-20");
+  const target=dashboardHeader
+   ?header.querySelector(":scope > div:nth-child(2)")||header
+   :nav
+    ?nav.parentElement.querySelector(":scope > div:last-child")
+    :row||header;
   const group=document.createElement("div");group.id="vp-nav-controls";group.className="vp-nav-controls";
   group.innerHTML=(nav?'<button class="vp-nav-control vp-menu-toggle" id="vp-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="vp-main-nav"><span class="material-symbols-outlined" aria-hidden="true">menu</span></button>':"")+'<button class="vp-nav-control" id="vp-theme" type="button"><span class="material-symbols-outlined" aria-hidden="true"></span></button><button class="vp-nav-control" id="vp-dir" type="button"><span class="material-symbols-outlined" aria-hidden="true">format_textdirection_r_to_l</span></button>';
   target.appendChild(group);
@@ -51,6 +56,19 @@
    updateControls();
   });
   updateControls();
+ }
+ function removeHeaderProfile(){
+  if(document.querySelector('meta[name="shell-type"][content="web_dashboard"]'))return;
+  document.querySelectorAll('header img[alt="Profile"]').forEach(image=>{
+   image.parentElement?.parentElement?.remove();
+  });
+ }
+ function normalizeBrandMarks(){
+  document.querySelectorAll('header img[alt="VitalPulse Wellness Logo"],aside img[alt="VitalPulse Wellness Logo"]').forEach(image=>{
+   image.src="assets/vitalpulse-favicon.svg";
+   image.alt="";
+   image.setAttribute("aria-hidden","true");
+  });
  }
  function setupMobileNavigation(nav,menuButton){
   const isMobile=()=>window.matchMedia("(max-width: 1279px)").matches;
@@ -101,7 +119,7 @@
    dirButton.title=rtl?"Switch to left-to-right layout":"Switch to right-to-left layout";
    dirButton.setAttribute("aria-label",dirButton.title);
    dirButton.setAttribute("aria-pressed",String(rtl));
-    dirButton.firstElementChild.textContent=rtl?"format_textdirection_l_to_r":"format_textdirection_r_to_l";
+   dirButton.firstElementChild.textContent="language";
   }
  }
  function removeNavSearch(){
@@ -124,6 +142,42 @@
    brand.before(homeLink);
    homeLink.append(brand);
   }
+  const nav=aside.querySelector("nav");
+  if(nav&&!aside.querySelector(".vp-dashboard-menu-toggle")){
+   nav.id=nav.id||"vp-dashboard-nav";
+   const menuButton=document.createElement("button");
+   menuButton.className="vp-dashboard-menu-toggle";
+   menuButton.type="button";
+   menuButton.setAttribute("aria-label","Open dashboard navigation");
+   menuButton.setAttribute("aria-expanded","false");
+   menuButton.setAttribute("aria-controls",nav.id);
+   menuButton.innerHTML='<span class="material-symbols-outlined" aria-hidden="true">menu</span>';
+   (brand?.closest(".vp-dashboard-brand-link")||brand)?.after(menuButton);
+   const closeMenu=()=>{
+    aside.classList.remove("vp-dashboard-menu-open");
+    menuButton.setAttribute("aria-expanded","false");
+    menuButton.setAttribute("aria-label","Open dashboard navigation");
+    menuButton.firstElementChild.textContent="menu";
+   };
+   menuButton.addEventListener("click",()=>{
+    const open=aside.classList.toggle("vp-dashboard-menu-open");
+    menuButton.setAttribute("aria-expanded",String(open));
+    menuButton.setAttribute("aria-label",open?"Close dashboard navigation":"Open dashboard navigation");
+    menuButton.firstElementChild.textContent=open?"close":"menu";
+   });
+   nav.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>{
+    if(window.matchMedia("(max-width: 1040px)").matches)closeMenu();
+   }));
+   document.addEventListener("click",event=>{
+    if(window.matchMedia("(max-width: 1040px)").matches&&!aside.contains(event.target))closeMenu();
+   });
+   document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&aside.classList.contains("vp-dashboard-menu-open")){closeMenu();menuButton.focus()}
+   });
+   window.addEventListener("resize",()=>{
+    if(!window.matchMedia("(max-width: 1040px)").matches)closeMenu();
+   });
+  }
   const subtitle=brand?.querySelector(".font-label-sm");
   if(employee&&subtitle)subtitle.textContent="Wellness Hub";
   const context=header.querySelector(":scope > div:first-child .inline-flex");
@@ -131,10 +185,27 @@
    const indicator=context.querySelector("span");
    context.replaceChildren(indicator,document.createTextNode(employee?"My wellness":"Workforce health"));
   }
+  const profile=header.querySelector(":scope > div:nth-child(2) > div.pl-2");
+  const profileName=profile?.querySelector(".hidden.xl\\:inline-block");
+  if(employee&&profileName)profileName.textContent="Alex Morgan (Employee)";
   header.querySelector(":scope > div:nth-child(2) > button")?.remove();
-  if(employee){
-   aside.querySelector('nav a[data-path="admin-portal"]')?.remove();
-   header.querySelector(":scope > div:nth-child(2) > div.pl-2")?.remove();
+  if(employee)aside.querySelector('nav a[data-path="admin-portal"]')?.remove();
+  const actions=header.querySelector(":scope > div:nth-child(2)");
+  if(actions&&!actions.querySelector(".vp-dashboard-logout")){
+   const logout=document.createElement("a");
+   logout.className="vp-dashboard-logout";
+   logout.href="login.html";
+   logout.innerHTML='<span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Log out</span>';
+   logout.setAttribute("aria-label","Log out");
+   const controls=actions.querySelector("#vp-nav-controls");
+   actions.insertBefore(logout,controls||null);
+  }
+  const main=document.querySelector("main");
+  if(main&&!main.querySelector(".vp-dashboard-welcome")){
+   const welcome=document.createElement("section");
+   welcome.className="vp-dashboard-welcome";
+   welcome.innerHTML=`<div class="vp-dashboard-welcome-icon"><span class="material-symbols-outlined" aria-hidden="true">${employee?"spa":"waving_hand"}</span></div><div><p class="vp-dashboard-welcome-title">${employee?"Your wellness at a glance":"Welcome back, Sarah."}</p><p class="vp-dashboard-welcome-message">${employee?"Daily habits, personal goals, and progress in one place.":"Here is your latest workforce health overview."}</p></div>`;
+   main.prepend(welcome);
   }
  }
  function reorderDashboardNav(){
@@ -166,32 +237,52 @@
   });
  }
  function footerBrandLink(footer){
+  function createBrandLockup(){
+   const logo=document.createElement("img");
+   logo.className="vp-footer-brand-image";
+   logo.src="assets/vitalpulse-favicon.svg";
+   logo.alt="";
+   logo.setAttribute("aria-hidden","true");
+   const copy=document.createElement("span");
+   copy.className="vp-footer-brand-copy";
+   const name=document.createElement("span");
+   name.className="vp-footer-brand-name";
+   name.textContent="VitalPulse";
+   const subtitle=document.createElement("span");
+   subtitle.className="vp-footer-brand-tagline";
+   subtitle.textContent="Wellness 360";
+   copy.append(name,subtitle);
+   const lockup=document.createElement("span");
+   lockup.className="vp-footer-brand-lockup";
+   lockup.append(logo,copy);
+   return lockup;
+  }
   const logo=footer.querySelector('img[alt="VitalPulse Wellness Logo"]');
   if(logo){
-   const brand=logo.parentElement;
-   if(brand.tagName!=="A"){
+   const existingLink=logo.closest("a");
+   if(existingLink){
+    existingLink.classList.add("vp-footer-brand");
+    existingLink.replaceChildren(createBrandLockup());
+   }else{
     const link=document.createElement("a");
     link.className="vp-footer-brand";
     link.href="index.html";
     link.setAttribute("aria-label","VitalPulse Wellness home");
-    brand.before(link);
-    link.append(brand);
+    link.append(createBrandLockup());
+    logo.parentElement.replaceWith(link);
    }
    return null;
   }
-  const source=document.querySelector('aside img[alt="VitalPulse Wellness Logo"]')||document.querySelector('header img[alt="VitalPulse Wellness Logo"]');
-  if(!source)return null;
+  const existingBrand=footer.querySelector(".vp-footer-brand");
+  if(existingBrand){
+   existingBrand.replaceChildren(createBrandLockup());
+   return null;
+  }
   const link=document.createElement("a");
   link.className="vp-footer-brand";
   link.href="index.html";
   link.setAttribute("aria-label","VitalPulse Wellness home");
-  const image=source.cloneNode(false);
-  image.alt="";
-  image.className="vp-footer-brand-image";
-  const name=document.createElement("span");
-  name.className="font-title-lg text-title-lg text-on-surface tracking-tight";
-  name.textContent="VitalPulse Wellness";
-  link.append(image,name);
+  link.append(createBrandLockup());
   return link;
  }
  function socialFooter(){
@@ -224,7 +315,7 @@
   document.querySelectorAll('a[href="#"]').forEach(a=>{
    const txt=norm(a.textContent);
    const match=Object.entries(routes).filter(([key])=>txt===key||txt.includes(key)).sort((a,b)=>b[0].length-a[0].length)[0];
-    let target=pathRoutes[norm(a.dataset.path)]||match?.[1]||null;
+    let target=/^(login|sign in)$/.test(txt)?"login.html":pathRoutes[norm(a.dataset.path)]||match?.[1]||null;
    if(!target&&/pricing|plans|subscription/.test(txt))target="pricing.html";
    if(!target&&/program|wellness catalog/.test(txt))target="programs.html";
    if(!target&&/dashboard|portal/.test(txt))target="employee-dashboard.html";
@@ -248,7 +339,7 @@
   });
  }
  function forms(){
-  document.querySelectorAll("form").forEach(f=>f.addEventListener("submit",e=>{
+  document.querySelectorAll("form:not([data-auth-form])").forEach(f=>f.addEventListener("submit",e=>{
    e.preventDefault();
    const bad=[...f.querySelectorAll("[required]")].find(x=>!x.value.trim());
    if(bad){bad.focus();toast("Please complete the required fields");return}
@@ -257,5 +348,5 @@
  }
  document.documentElement.dataset.theme=localStorage.getItem("vp-theme")||"light";
  document.documentElement.dir=localStorage.getItem("vp-dir")||"ltr";
- document.addEventListener("DOMContentLoaded",()=>{notifications();removeNavSearch();controls();dashboardHeader();links();reorderDashboardNav();markCurrentNav();socialFooter();forms()});
+ document.addEventListener("DOMContentLoaded",()=>{notifications();removeNavSearch();removeHeaderProfile();normalizeBrandMarks();controls();dashboardHeader();links();reorderDashboardNav();markCurrentNav();socialFooter();forms()});
 })();
